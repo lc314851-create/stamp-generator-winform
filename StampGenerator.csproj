@@ -5,14 +5,10 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>stamp.ico</ApplicationIcon>
+
     <AssemblyName>StampGenerator</AssemblyName>
     <RootNamespace>StampGenerator</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Update="stamp.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+
 </Project>
