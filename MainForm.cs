@@ -19,7 +19,6 @@ namespace StampGenerator
         private PictureBox picPreview = null!;
         private Button btnCenter = null!;
         private Button btnDownload = null!;
-        private Button btnGenerate = null!;
 
         private readonly StampConfig _config = new();
 
@@ -42,7 +41,6 @@ namespace StampGenerator
 
         private void InitControls()
         {
-            // 左侧控制面板
             var leftPanel = new Panel
             {
                 Location = new Point(15, 15),
@@ -58,7 +56,6 @@ namespace StampGenerator
             var labelWidth = 80;
             var controlWidth = 200;
 
-            // 标题
             var title = new Label
             {
                 Text = "印章生成器",
@@ -78,7 +75,7 @@ namespace StampGenerator
                 Location = new Point(controlX + labelWidth + 5, labelY),
                 Size = new Size(controlWidth - labelWidth - 10, 25),
                 PlaceholderText = "请输入印章文字",
-                Text = "软件部"
+                Text = "合同专用章"
             };
             txtText.TextChanged += (s, e) => { _config.Text = txtText.Text; RenderStamp(); };
             leftPanel.Controls.Add(txtText);
@@ -244,72 +241,113 @@ namespace StampGenerator
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.Clear(Color.White);
 
-            var centerX = 200f;
-            var centerY = 200f;
-            var radius = 180 - _config.Padding;
-            var stampColor = _config.Color;
-
-            // 绘制外框
-            using var pen = new Pen(stampColor, 4);
-            using var penInner = new Pen(stampColor, 2);
-
-            switch (_config.Shape)
-            {
-                case StampShape.Circle:
-                    g.DrawEllipse(pen, centerX - radius, centerY - radius, radius * 2, radius * 2);
-                    g.DrawEllipse(penInner, centerX - radius + 8, centerY - radius + 8, radius * 2 - 16, radius * 2 - 16);
-                    break;
-                case StampShape.Square:
-                    var size = radius * 1.6f;
-                    var rect = new RectangleF(centerX - size / 2, centerY - size / 2, size, size);
-                    g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
-                    g.DrawRectangle(penInner, rect.X + 8, rect.Y + 8, rect.Width - 16, rect.Height - 16);
-                    break;
-                case StampShape.Ellipse:
-                    g.DrawEllipse(pen, centerX - radius * 1.5f, centerY - radius, radius * 3, radius * 2);
-                    g.DrawEllipse(penInner, centerX - radius * 1.5f + 8, centerY - radius + 8, radius * 3 - 16, radius * 2 - 16);
-                    break;
-            }
-
-            // 绘制文字
-            if (!string.IsNullOrWhiteSpace(_config.Text))
-            {
-                var state = g.Save();
-                g.TranslateTransform(centerX, centerY);
-                g.RotateTransform(_config.Rotation);
-                g.TranslateTransform(-centerX, -centerY);
-
-                using var font = new Font("SimHei", _config.FontSize * 2, FontStyle.Bold);
-                using var brush = new SolidBrush(stampColor);
-                using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-
-                if (_config.IsVertical)
-                {
-                    DrawVerticalText(g, font, brush, _config.Text, centerX, centerY, _config.FontSize * 2 + _config.Spacing);
-                }
-                else
-                {
-                    g.DrawString(_config.Text, font, brush, new RectangleF(0, 0, 400, 400), format);
-                }
-
-                g.Restore(state);
-            }
+            RenderStampToGraphics(g, _config, 400, 400);
 
             picPreview.Image?.Dispose();
             picPreview.Image = bitmap;
         }
 
-        private void DrawVerticalText(Graphics g, Font font, Brush brush, string text, float centerX, float centerY, float lineHeight)
+        private void RenderStampToGraphics(Graphics g, StampConfig config, int width, int height)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.Clear(Color.White);
+
+            var centerX = width / 2f;
+            var centerY = height / 2f;
+            var radius = 180 - config.Padding;
+            var stampColor = config.Color;
+
+            // 外框 - 粗边框
+            using var penOuter = new Pen(stampColor, config.Shape == StampShape.Circle ? 6 : 4);
+            using var penInner = new Pen(stampColor, 2);
+
+            if (config.Shape == StampShape.Circle)
+            {
+                // 外圆
+                g.DrawEllipse(penOuter, centerX - radius, centerY - radius, radius * 2, radius * 2);
+                // 内圆
+                g.DrawEllipse(penInner, centerX - radius + 12, centerY - radius + 12, radius * 2 - 24, radius * 2 - 24);
+            }
+            else if (config.Shape == StampShape.Square)
+            {
+                var size = radius * 1.7f;
+                g.DrawRectangle(penOuter, centerX - size / 2, centerY - size / 2, size, size);
+                g.DrawRectangle(penInner, centerX - size / 2 + 10, centerY - size / 2 + 10, size - 20, size - 20);
+            }
+            else if (config.Shape == StampShape.Ellipse)
+            {
+                g.DrawEllipse(penOuter, centerX - radius * 1.5f, centerY - radius, radius * 3, radius * 2);
+                g.DrawEllipse(penInner, centerX - radius * 1.5f + 10, centerY - radius + 10, radius * 3 - 20, radius * 2 - 20);
+            }
+
+            // 绘制五角星（顶部）
+            DrawStar(g, centerX, centerY - radius + 45, 18, stampColor);
+
+            // 绘制弧形文字（底部环绕）
+            if (!string.IsNullOrWhiteSpace(config.Text))
+            {
+                var state = g.Save();
+                g.TranslateTransform(centerX, centerY);
+                g.RotateTransform(config.Rotation);
+                g.TranslateTransform(-centerX, -centerY);
+
+                using var font = new Font("SimHei", config.FontSize * 1.8f, FontStyle.Bold);
+                using var brush = new SolidBrush(stampColor);
+
+                // 文字沿底部弧线排列
+                DrawArcText(g, config.Text, font, brush, centerX, centerY, radius - 30, config.Spacing);
+
+                g.Restore(state);
+            }
+
+            // 中心装饰圆
+            using var penCenter = new Pen(stampColor, 1.5f);
+            g.DrawEllipse(penCenter, centerX - 25, centerY - 25, 50, 50);
+        }
+
+        private void DrawStar(Graphics g, float x, float y, float size, Color color)
+        {
+            using var brush = new SolidBrush(color);
+            using var pen = new Pen(color, 1.5f);
+            
+            var points = new PointF[10];
+            var innerRadius = size * 0.382f;
+
+            for (int i = 0; i < 10; i++)
+            {
+                var radius = i % 2 == 0 ? size : innerRadius;
+                var angle = -Math.PI / 2 + i * Math.PI / 5;
+                points[i] = new PointF(
+                    x + (float)(radius * Math.Cos(angle)),
+                    y + (float)(radius * Math.Sin(angle))
+                );
+            }
+
+            g.FillPolygon(brush, points);
+        }
+
+        private void DrawArcText(Graphics g, string text, Font font, Brush brush, float centerX, float centerY, float radius, float charSpacing)
         {
             var chars = text.ToCharArray();
-            var totalHeight = (chars.Length - 1) * lineHeight;
-            var currentY = centerY - totalHeight / 2;
+            var totalAngle = (chars.Length - 1) * (12 + charSpacing * 0.5f);
+            var startAngle = 180 - totalAngle / 2;
 
             using var format = new StringFormat { Alignment = StringAlignment.Center };
-            foreach (var c in chars)
+            format.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, 1) });
+
+            for (int i = 0; i < chars.Length; i++)
             {
-                g.DrawString(c.ToString(), font, brush, centerX, currentY + lineHeight / 2, format);
-                currentY += lineHeight;
+                var charAngle = startAngle + i * (12 + charSpacing * 0.5f);
+                var rad = charAngle * Math.PI / 180;
+
+                var charX = centerX + (float)(radius * Math.Sin(rad));
+                var charY = centerY + (float)(radius * Math.Cos(rad));
+
+                g.Save();
+                g.TranslateTransform(charX, charY);
+                g.RotateTransform(-(float)(charAngle - 90));
+                g.DrawString(chars[i].ToString(), font, brush, 0, -font.Height / 2.5f, format);
+                g.Restore();
             }
         }
 
@@ -346,71 +384,9 @@ namespace StampGenerator
             {
                 var bitmap = new Bitmap(400, 400);
                 using var g = Graphics.FromImage(bitmap);
-                // 重绘到新bitmap
                 RenderStampToGraphics(g, _config, 400, 400);
                 bitmap.Save(dialog.FileName, System.Drawing.Imaging.ImageFormat.Png);
                 MessageBox.Show("图片已保存！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-
-        private void RenderStampToGraphics(Graphics g, StampConfig config, int width, int height)
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(Color.White);
-
-            var centerX = width / 2f;
-            var centerY = height / 2f;
-            var radius = 180 - config.Padding;
-            var stampColor = config.Color;
-
-            using var pen = new Pen(stampColor, 4);
-            using var penInner = new Pen(stampColor, 2);
-
-            switch (config.Shape)
-            {
-                case StampShape.Circle:
-                    g.DrawEllipse(pen, centerX - radius, centerY - radius, radius * 2, radius * 2);
-                    g.DrawEllipse(penInner, centerX - radius + 8, centerY - radius + 8, radius * 2 - 16, radius * 2 - 16);
-                    break;
-                case StampShape.Square:
-                    var size = radius * 1.6f;
-                    g.DrawRectangle(pen, centerX - size / 2, centerY - size / 2, size, size);
-                    g.DrawRectangle(penInner, centerX - size / 2 + 8, centerY - size / 2 + 8, size - 16, size - 16);
-                    break;
-                case StampShape.Ellipse:
-                    g.DrawEllipse(pen, centerX - radius * 1.5f, centerY - radius, radius * 3, radius * 2);
-                    g.DrawEllipse(penInner, centerX - radius * 1.5f + 8, centerY - radius + 8, radius * 3 - 16, radius * 2 - 16);
-                    break;
-            }
-
-            if (!string.IsNullOrWhiteSpace(config.Text))
-            {
-                var state = g.Save();
-                g.TranslateTransform(centerX, centerY);
-                g.RotateTransform(config.Rotation);
-                g.TranslateTransform(-centerX, -centerY);
-
-                using var font = new Font("SimHei", config.FontSize * 2, FontStyle.Bold);
-                using var brush = new SolidBrush(stampColor);
-                using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-
-                if (config.IsVertical)
-                {
-                    var chars = config.Text.ToCharArray();
-                    var totalHeight = (chars.Length - 1) * (config.FontSize * 2 + config.Spacing);
-                    var currentY = centerY - totalHeight / 2;
-                    foreach (var c in chars)
-                    {
-                        g.DrawString(c.ToString(), font, brush, centerX, currentY + config.FontSize, format);
-                        currentY += config.FontSize * 2 + config.Spacing;
-                    }
-                }
-                else
-                {
-                    g.DrawString(config.Text, font, brush, new RectangleF(0, 0, width, height), format);
-                }
-
-                g.Restore(state);
             }
         }
     }
@@ -419,7 +395,7 @@ namespace StampGenerator
 
     public class StampConfig
     {
-        public string Text { get; set; } = "软件部";
+        public string Text { get; set; } = "合同专用章";
         public StampShape Shape { get; set; } = StampShape.Circle;
         public int ColorIndex { get; set; } = 0;
         public bool IsVertical { get; set; } = false;
@@ -430,9 +406,9 @@ namespace StampGenerator
 
         public Color Color => ColorIndex switch
         {
-            0 => Color.FromArgb(229, 51, 51),    // 红色
-            1 => Color.FromArgb(0, 85, 170),      // 蓝色
-            2 => Color.FromArgb(34, 153, 68),    // 绿色
+            0 => Color.FromArgb(229, 51, 51),
+            1 => Color.FromArgb(0, 85, 170),
+            2 => Color.FromArgb(34, 153, 68),
             _ => Color.Red
         };
     }
