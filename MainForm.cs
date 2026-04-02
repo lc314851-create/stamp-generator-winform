@@ -67,7 +67,6 @@ namespace StampGenerator
             };
             leftPanel.Controls.Add(title);
 
-            // 印面文字
             labelY = 65;
             leftPanel.Controls.Add(new Label { Text = "印面文字", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             txtText = new TextBox
@@ -80,7 +79,6 @@ namespace StampGenerator
             txtText.TextChanged += (s, e) => { _config.Text = txtText.Text; RenderStamp(); };
             leftPanel.Controls.Add(txtText);
 
-            // 印章形状
             labelY += 40;
             leftPanel.Controls.Add(new Label { Text = "印章形状", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             cboShape = new ComboBox
@@ -94,7 +92,6 @@ namespace StampGenerator
             cboShape.SelectedIndexChanged += (s, e) => { _config.Shape = (StampShape)cboShape.SelectedIndex; RenderStamp(); };
             leftPanel.Controls.Add(cboShape);
 
-            // 印章颜色
             labelY += 40;
             leftPanel.Controls.Add(new Label { Text = "印章颜色", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             cboColor = new ComboBox
@@ -108,7 +105,6 @@ namespace StampGenerator
             cboColor.SelectedIndexChanged += (s, e) => { _config.ColorIndex = cboColor.SelectedIndex; RenderStamp(); };
             leftPanel.Controls.Add(cboColor);
 
-            // 排版方式
             labelY += 40;
             leftPanel.Controls.Add(new Label { Text = "排版方式", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             cboLayout = new ComboBox
@@ -122,7 +118,6 @@ namespace StampGenerator
             cboLayout.SelectedIndexChanged += (s, e) => { _config.IsVertical = cboLayout.SelectedIndex == 1; RenderStamp(); };
             leftPanel.Controls.Add(cboLayout);
 
-            // 字号
             labelY += 40;
             leftPanel.Controls.Add(new Label { Text = "字号", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             lblFontSize = new Label { Location = new Point(controlX + labelWidth + 5, labelY), Size = new Size(40, 25), Text = "20" };
@@ -136,7 +131,6 @@ namespace StampGenerator
             trkFontSize.ValueChanged += (s, e) => { _config.FontSize = trkFontSize.Value; lblFontSize.Text = trkFontSize.Value.ToString(); RenderStamp(); };
             leftPanel.Controls.Add(trkFontSize);
 
-            // 间距
             labelY += 45;
             leftPanel.Controls.Add(new Label { Text = "间距", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             lblSpacing = new Label { Location = new Point(controlX + labelWidth + 5, labelY), Size = new Size(40, 25), Text = "5" };
@@ -150,7 +144,6 @@ namespace StampGenerator
             trkSpacing.ValueChanged += (s, e) => { _config.Spacing = trkSpacing.Value; lblSpacing.Text = trkSpacing.Value.ToString(); RenderStamp(); };
             leftPanel.Controls.Add(trkSpacing);
 
-            // 边距
             labelY += 45;
             leftPanel.Controls.Add(new Label { Text = "边距", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             lblPadding = new Label { Location = new Point(controlX + labelWidth + 5, labelY), Size = new Size(40, 25), Text = "10" };
@@ -164,7 +157,6 @@ namespace StampGenerator
             trkPadding.ValueChanged += (s, e) => { _config.Padding = trkPadding.Value; lblPadding.Text = trkPadding.Value.ToString(); RenderStamp(); };
             leftPanel.Controls.Add(trkPadding);
 
-            // 旋转角度
             labelY += 45;
             leftPanel.Controls.Add(new Label { Text = "旋转角度", Location = new Point(controlX, labelY), Size = new Size(labelWidth, 25) });
             lblRotation = new Label { Location = new Point(controlX + labelWidth + 5, labelY), Size = new Size(40, 25), Text = "0" };
@@ -178,7 +170,6 @@ namespace StampGenerator
             trkRotation.ValueChanged += (s, e) => { _config.Rotation = trkRotation.Value; lblRotation.Text = trkRotation.Value.ToString(); RenderStamp(); };
             leftPanel.Controls.Add(trkRotation);
 
-            // 按钮组
             labelY += 50;
             btnCenter = new Button
             {
@@ -203,7 +194,6 @@ namespace StampGenerator
             btnDownload.Click += (s, e) => DownloadImage();
             leftPanel.Controls.Add(btnDownload);
 
-            // 右侧预览区
             var rightPanel = new Panel
             {
                 Location = new Point(350, 15),
@@ -254,36 +244,35 @@ namespace StampGenerator
 
             var centerX = width / 2f;
             var centerY = height / 2f;
-            var radius = 180 - config.Padding;
+            var radius = 170 - config.Padding;
             var stampColor = config.Color;
 
-            // 外框 - 粗边框
-            using var penOuter = new Pen(stampColor, config.Shape == StampShape.Circle ? 6 : 4);
-            using var penInner = new Pen(stampColor, 2);
+            // 外框
+            using var penOuter = new Pen(stampColor, config.Shape == StampShape.Circle ? 5 : 4);
+            using var penInner = new Pen(stampColor, 1.5f);
 
             if (config.Shape == StampShape.Circle)
             {
-                // 外圆
                 g.DrawEllipse(penOuter, centerX - radius, centerY - radius, radius * 2, radius * 2);
-                // 内圆
-                g.DrawEllipse(penInner, centerX - radius + 12, centerY - radius + 12, radius * 2 - 24, radius * 2 - 24);
+                g.DrawEllipse(penInner, centerX - radius + 10, centerY - radius + 10, radius * 2 - 20, radius * 2 - 20);
             }
             else if (config.Shape == StampShape.Square)
             {
-                var size = radius * 1.7f;
+                var size = radius * 1.6f;
                 g.DrawRectangle(penOuter, centerX - size / 2, centerY - size / 2, size, size);
-                g.DrawRectangle(penInner, centerX - size / 2 + 10, centerY - size / 2 + 10, size - 20, size - 20);
+                g.DrawRectangle(penInner, centerX - size / 2 + 8, centerY - size / 2 + 8, size - 16, size - 16);
             }
             else if (config.Shape == StampShape.Ellipse)
             {
                 g.DrawEllipse(penOuter, centerX - radius * 1.5f, centerY - radius, radius * 3, radius * 2);
-                g.DrawEllipse(penInner, centerX - radius * 1.5f + 10, centerY - radius + 10, radius * 3 - 20, radius * 2 - 20);
+                g.DrawEllipse(penInner, centerX - radius * 1.5f + 8, centerY - radius + 8, radius * 3 - 16, radius * 2 - 16);
             }
 
-            // 绘制五角星（顶部）
-            DrawStar(g, centerX, centerY - radius + 45, 18, stampColor);
+            // 中心五角星
+            var starSize = 35;
+            DrawStar(g, centerX, centerY, starSize, stampColor);
 
-            // 绘制弧形文字（底部环绕）
+            // 弧形文字（底部环绕）
             if (!string.IsNullOrWhiteSpace(config.Text))
             {
                 var state = g.Save();
@@ -291,62 +280,75 @@ namespace StampGenerator
                 g.RotateTransform(config.Rotation);
                 g.TranslateTransform(-centerX, -centerY);
 
-                using var font = new Font("SimHei", config.FontSize * 1.8f, FontStyle.Bold);
+                using var font = new Font("SimHei", config.FontSize * 1.6f, FontStyle.Bold);
                 using var brush = new SolidBrush(stampColor);
 
                 // 文字沿底部弧线排列
-                DrawArcText(g, config.Text, font, brush, centerX, centerY, radius - 30, config.Spacing);
+                DrawBottomArcText(g, config.Text, font, brush, centerX, centerY, radius - 25, config.Spacing);
 
                 g.Restore(state);
             }
-
-            // 中心装饰圆
-            using var penCenter = new Pen(stampColor, 1.5f);
-            g.DrawEllipse(penCenter, centerX - 25, centerY - 25, 50, 50);
         }
 
-        private void DrawStar(Graphics g, float x, float y, float size, Color color)
+        private void DrawStar(Graphics g, float cx, float cy, float size, Color color)
         {
             using var brush = new SolidBrush(color);
-            using var pen = new Pen(color, 1.5f);
-            
             var points = new PointF[10];
             var innerRadius = size * 0.382f;
 
             for (int i = 0; i < 10; i++)
             {
-                var radius = i % 2 == 0 ? size : innerRadius;
+                var r = i % 2 == 0 ? size : innerRadius;
                 var angle = -Math.PI / 2 + i * Math.PI / 5;
                 points[i] = new PointF(
-                    x + (float)(radius * Math.Cos(angle)),
-                    y + (float)(radius * Math.Sin(angle))
+                    cx + (float)(r * Math.Cos(angle)),
+                    cy + (float)(r * Math.Sin(angle))
                 );
             }
 
             g.FillPolygon(brush, points);
         }
 
-        private void DrawArcText(Graphics g, string text, Font font, Brush brush, float centerX, float centerY, float radius, float charSpacing)
+        private void DrawBottomArcText(Graphics g, string text, Font font, Brush brush, float cx, float cy, float radius, float extraSpacing)
         {
             var chars = text.ToCharArray();
-            var totalAngle = (chars.Length - 1) * (12 + charSpacing * 0.5f);
-            var startAngle = 180 - totalAngle / 2;
+            var n = chars.Length;
+            if (n == 0) return;
 
-            using var format = new StringFormat { Alignment = StringAlignment.Center };
-            format.SetMeasurableCharacterRanges(new[] { new CharacterRange(0, 1) });
+            // 计算每个字符占用的角度
+            // 根据字符宽度估算角度范围
+            var avgCharWidth = font.Height * 0.6f;
+            var arcLength = n * avgCharWidth + (n - 1) * extraSpacing;
+            var totalAngle = arcLength / radius;
 
-            for (int i = 0; i < chars.Length; i++)
+            // 从底部左侧开始，让文字均匀分布在底部弧线上
+            // 底部弧线范围：-150° 到 -30° (或 210° 到 330°)
+            var startAngleDeg = 200.0;
+            var angleStep = totalAngle / Math.Max(n - 1, 1);
+
+            using var format = new StringFormat();
+            format.Alignment = StringAlignment.Center;
+            format.LineAlignment = StringAlignment.Center;
+
+            for (int i = 0; i < n; i++)
             {
-                var charAngle = startAngle + i * (12 + charSpacing * 0.5f);
-                var rad = charAngle * Math.PI / 180;
+                var angleDeg = startAngleDeg + i * angleStep;
+                var angleRad = angleDeg * Math.PI / 180.0;
 
-                var charX = centerX + (float)(radius * Math.Sin(rad));
-                var charY = centerY + (float)(radius * Math.Cos(rad));
+                var x = cx + (float)(radius * Math.Cos(angleRad));
+                var y = cy + (float)(radius * Math.Sin(angleRad));
+
+                // 字符旋转角度：沿着圆弧的切线方向
+                // 切线角度 = 圆心角 + 90°
+                var charAngleDeg = angleDeg + 90;
 
                 g.Save();
-                g.TranslateTransform(charX, charY);
-                g.RotateTransform(-(float)(charAngle - 90));
-                g.DrawString(chars[i].ToString(), font, brush, 0, -font.Height / 2.5f, format);
+                g.TranslateTransform(x, y);
+                g.RotateTransform((float)charAngleDeg);
+
+                // 在旋转后的坐标系中绘制文字，原点在字符中心
+                g.DrawString(chars[i].ToString(), font, brush, 0, 0, format);
+
                 g.Restore();
             }
         }
