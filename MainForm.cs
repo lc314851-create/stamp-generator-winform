@@ -274,7 +274,7 @@ namespace StampGenerator
             // 绘制文字
             if (!string.IsNullOrWhiteSpace(_config.Text))
             {
-                g.Save();
+                var state = g.Save();
                 g.TranslateTransform(centerX, centerY);
                 g.RotateTransform(_config.Rotation);
                 g.TranslateTransform(-centerX, -centerY);
@@ -292,7 +292,7 @@ namespace StampGenerator
                     g.DrawString(_config.Text, font, brush, new RectangleF(0, 0, 400, 400), format);
                 }
 
-                g.Restore();
+                g.Restore(state);
             }
 
             picPreview.Image?.Dispose();
@@ -385,7 +385,7 @@ namespace StampGenerator
 
             if (!string.IsNullOrWhiteSpace(config.Text))
             {
-                g.Save();
+                var state = g.Save();
                 g.TranslateTransform(centerX, centerY);
                 g.RotateTransform(config.Rotation);
                 g.TranslateTransform(-centerX, -centerY);
@@ -410,7 +410,7 @@ namespace StampGenerator
                     g.DrawString(config.Text, font, brush, new RectangleF(0, 0, width, height), format);
                 }
 
-                g.Restore();
+                g.Restore(state);
             }
         }
     }
