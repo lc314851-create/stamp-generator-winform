@@ -315,39 +315,35 @@ namespace StampGenerator
             var n = chars.Length;
             if (n == 0) return;
 
-            // 计算每个字符占用的角度
-            // 根据字符宽度估算角度范围
-            var avgCharWidth = font.Height * 0.6f;
-            var arcLength = n * avgCharWidth + (n - 1) * extraSpacing;
-            var totalAngle = arcLength / radius;
-
-            // 从底部左侧开始，让文字均匀分布在底部弧线上
-            // 底部弧线范围：-150° 到 -30° (或 210° 到 330°)
-            var startAngleDeg = 200.0;
-            var angleStep = totalAngle / Math.Max(n - 1, 1);
+            // 底部弧线范围：从左边 210° 到右边 330° (共 120°)
+            // 每个字符占用 120° / n 的角度
+            var totalArc = 120.0;
+            var angleStep = totalArc / n;
+            var startAngle = 210.0;
 
             using var format = new StringFormat();
             format.Alignment = StringAlignment.Center;
-            format.LineAlignment = StringAlignment.Center;
 
             for (int i = 0; i < n; i++)
             {
-                var angleDeg = startAngleDeg + i * angleStep;
+                var angleDeg = startAngle + i * angleStep;
                 var angleRad = angleDeg * Math.PI / 180.0;
 
+                // 字符中心位置（在圆弧上）
                 var x = cx + (float)(radius * Math.Cos(angleRad));
                 var y = cy + (float)(radius * Math.Sin(angleRad));
 
-                // 字符旋转角度：沿着圆弧的切线方向
-                // 切线角度 = 圆心角 + 90°
-                var charAngleDeg = angleDeg + 90;
+                // 字符旋转角度：沿着圆弧切线方向
+                // 切线方向 = 角度 + 90°
+                var charAngle = angleDeg + 90;
 
                 g.Save();
                 g.TranslateTransform(x, y);
-                g.RotateTransform((float)charAngleDeg);
+                g.RotateTransform((float)charAngle);
 
-                // 在旋转后的坐标系中绘制文字，原点在字符中心
-                g.DrawString(chars[i].ToString(), font, brush, 0, 0, format);
+                // 绘制单个字符
+                var size = g.MeasureString(chars[i].ToString(), font);
+                g.DrawString(chars[i].ToString(), font, brush, -size.Width / 2, -size.Height / 2, format);
 
                 g.Restore();
             }
